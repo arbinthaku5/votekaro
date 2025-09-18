@@ -1,0 +1,59 @@
+voting application 
+
+
+a app where user can vote to the given set of candidates
+
+
+app's functionality
+
+1.user sign in/ sign up
+2.see the list of candidates and the votes they gained
+3.single vote casting
+4.admin cannot vote can maintain both user and campaings
+5. moderator can manage campaings
+6.
+
+
+************routes*************
+user authentication:
+    POST /auth/register: create new user account
+    POST /atuh/login: login into existing user account
+    GET /auth/profile: gets the user info
+
+user management(admin)
+    GET /users: list users
+    PUT /users/:id: update user (role included)
+    DELETE /users/:id: delete user
+
+campaign management(admin/moderator)
+    POST /campaigns: create campaign
+    GET /campaigns: list the campaings
+    GET /campaigns/:id: get campaign by id
+    PUT /campaigns/:id: update campaign by id
+    DELETE /campaigns/:id: delete campaign by id
+
+candidate management(admin/moderator)
+    POST /campaigns/:id/candidates: add candidates(link with user_id)
+    GET /campaigns/:id/candidates: list candidates
+    DELETE /campaigns/:id/candidates/:can_id: deletes the candidate from a campaign
+
+voting(voter/candidate)
+    GET /campaigns/:id/can_vote: checks if voter can vote
+    POST /campaigns/:id/vote: cast a vote 
+    GET /campaigns/:id/results: Get vote counts via websocket(for real time)
+ 
+
+
+ login page has email and password
+ sign up page has first name last name username email password confirm password
+ user/voter can edit profile which has first name, last name, photo, username,dateof birth, email, bio,password and confrim password
+ user/voter can view campaigns past, on going and up coming
+ admin can login, create campaign, user management(edit and delete user) and moderator managament(add,edit and delete moderator),
+ admin can create campaign where he can add banner photo, campaign title, campaign description,add candidates, add start and end dates
+ admin when adding candidtaes can add candidate photo, name, bio
+ admin can create multiple campaigns with in which the he/she can add multiple candidates too
+ when admin add moderator he should input moderator name, email and password.
+ moderator can do everything admin can nut not user managament and moderator managament.
+
+ 
+
