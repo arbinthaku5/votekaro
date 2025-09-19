@@ -27,17 +27,17 @@ const { authorizeRoles } = require("../middleware/rbac");
 const router = express.Router();
 
 const campaignSchema = z.object({
-  title: z.string().min(3),
-  description: z.string().min(10),
-  banner: z.string().optional(),
-  startDate: z.string(), 
-  endDate: z.string()
+  title: z.string(),
+  description: z.string(),
+  banner_url: z.string().nullable().optional(),
+  start_date: z.string(),
+  end_date: z.string()
 });
 
 const candidateSchema = z.object({
-  name: z.string().min(2),
-  bio: z.string().min(10),
-  photo: z.string().optional()
+  name: z.string(),
+  bio: z.string().nullable().optional(),
+  photo_url: z.string().nullable().optional()
 });
 
 router.get("/", campaignsCtrl.list);
