@@ -24,4 +24,8 @@ async function adminDeleteUser(targetUserId) {
   return usersModel.deleteUser(targetUserId);
 }
 
-module.exports = { getProfile, updateProfile, adminUpdateUser, adminDeleteUser };
+async function listUsers() {
+  return usersModel.listUsers();
+}
+
+module.exports = { getProfile, updateProfile, adminUpdateUser, adminDeleteUser, listUsers };

@@ -32,4 +32,9 @@ async function deleteUser(id) {
   await db.query('DELETE FROM users WHERE id=$1', [id]);
 }
 
-module.exports = { createUser, findByEmail, findById, updateUser, deleteUser };
+async function listUsers() {
+  const { rows } = await db.query('SELECT id, first_name, last_name, username, email, role, dob, bio, photo_url, created_at FROM users ORDER BY created_at DESC');
+  return rows;
+}
+
+module.exports = { createUser, findByEmail, findById, updateUser, deleteUser, listUsers };

@@ -30,6 +30,7 @@ const loginSchema = z.object({
 
 router.post("/signup", validate(signupSchema), authCtrl.signup);
 router.post("/login", validate(loginSchema), authCtrl.login);
+router.post("/logout", authCtrl.logout);
 
 module.exports = router;
 

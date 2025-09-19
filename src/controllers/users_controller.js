@@ -27,3 +27,10 @@ exports.adminDeleteUser = async (req, res, next) => {
     res.status(204).send();
   } catch (err) { next(err); }
 };
+
+exports.list = async (req, res, next) => {
+  try {
+    const users = await usersService.listUsers();
+    res.json(users);
+  } catch (err) { next(err); }
+};

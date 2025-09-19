@@ -35,7 +35,14 @@ async function addCandidate(campaignId, payload) {
 }
 
 async function list(status) {
-  return campaignsModel.listByStatus(status);
+  const campaigns = await campaignsModel.listByStatus(status);
+  const withCandidates = await Promise.all(campaigns.map(async c => {
+    const candidates = await campaignsModel.getCandidatesByCampaign(c.id);
+    const counts = await votesModel.countVotesByCampaign(c.id);
+    const votesMap = counts.reduce((m, r) => { m[r.candidate_id] = r.votes; return m; }, {});
+    return { ...c, candidates: candidates.map(cd => ({...cd, votes: votesMap[cd.id] || 0 })) };
+  }));
+  return withCandidates;
 }
 
 async function getCampaign(id) {
