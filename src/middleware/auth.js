@@ -2,9 +2,8 @@ const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config');
 
 function authenticate(req, res, next) {
-  const h = req.headers.authorization;
-  if (!h || !h.startsWith('Bearer ')) return res.status(401).json({ message: 'Missing token' });
-  const token = h.split(' ')[1];
+  const token = req.cookies.accessToken;
+  if (!token) return res.status(401).json({ message: 'Missing token' });
   try {
     const payload = jwt.verify(token, jwtSecret);
     req.user = { id: payload.sub, role: payload.role };

@@ -1,0 +1,56 @@
+
+POST http://localhost:4000/api/auth/signup
+{
+    "firstName":"admin",
+    "lastName":"admin",
+    "username":"admin1",
+    "email":"admin@gmail.com",
+    "password":"Password123"
+}
+POST http://localhost:4000/api/auth/login
+{
+    "email":"admin@gmail.com",
+    "password":"Password123"
+}
+
+\\\\\\\\\\for testing the users
+GET http://localhost:4000/api/users/me 
+with headers Authorization: Bearer <paste_your_token_here>
+
+\\\\\\\\\\\\\\\\\for updating users
+UPDATE users SET role='admin','moderator' WHERE email = 'admin@gmail.com';
+
+
+\\\\\\\\\\\to create campaigns
+POST http://localhost:4000/api/campaigns
+HEADERS
+Authorization: Bearer <admin_token_here>
+Content-Type: application/json
+BODY
+{
+  "title": "best sports",
+  "description": "soccer/football",
+  "banner_url": "banner.png",
+  "start_date": "2025-09-17T00:00:00Z",
+  "end_date": "2025-10-07T23:59:59Z"
+}
+
+\\\\\\\\\\\\\\add candidate to a campaign
+POST http://localhost:4000/api/campaigns/<CAMPAIGN_ID>/candidates
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "name": "football",
+  "bio": "European",
+  "photo_url": "ucl.png"
+}
+
+\\\\\\\\\\cast a vote
+POST http://localhost:4000/api/campaigns/<CAMPAIGN_ID>/vote
+Authorization: Bearer <voter_token>
+Content-Type: application/json
+
+{ "candidate_id": "<CANDIDATE_ID>" }
+
+
