@@ -23,12 +23,13 @@ const { authorizeRoles } = require("../middleware/rbac");
 const router = express.Router();
 
 const updateMeSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
   username: z.string().min(3).optional(),
   email: z.email().optional(),
   bio: z.string().max(500).optional(),
   dob: z.string().optional(),
+  photo_url: z.string().optional(),
   password: z.string().min(8).optional()
 });
 
