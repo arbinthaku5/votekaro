@@ -46,7 +46,21 @@ async function getCandidatesByCampaign(campaign_id) {
   return rows;
 }
 
+async function deleteCandidate(campaignId, candidateId) {
+  await db.query('DELETE FROM candidates WHERE campaign_id = $1 AND id = $2', [campaignId, candidateId]);
+}
+
+async function updateCandidate(campaignId, candidateId, fields) {
+  const keys = Object.keys(fields);
+  if (!keys.length) return getCandidatesByCampaign(campaignId).find(c => c.id === candidateId);
+  const set = keys.map((k,i) => `${k}=$${i+3}`).join(', ');
+  const values = [campaignId, candidateId, ...keys.map(k => fields[k])];
+  const q = `UPDATE candidates SET ${set} WHERE campaign_id=$1 AND id=$2 RETURNING *`;
+  const { rows } = await db.query(q, values);
+  return rows[0];
+}
+
 module.exports = {
   createCampaign, updateCampaign, deleteCampaign, getCampaignById, listByStatus,
-  addCandidate, getCandidatesByCampaign
+  addCandidate, getCandidatesByCampaign, deleteCandidate, updateCandidate
 };

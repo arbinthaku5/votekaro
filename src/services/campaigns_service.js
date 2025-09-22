@@ -54,6 +54,14 @@ async function getCampaign(id) {
   return { ...c, candidates: candidates.map(cd => ({...cd, votes: votesMap[cd.id] || 0 })) };
 }
 
+async function removeCandidate(campaignId, candidateId) {
+  return campaignsModel.deleteCandidate(campaignId, candidateId);
+}
+
+async function modifyCandidate(campaignId, candidateId, payload) {
+  return campaignsModel.updateCandidate(campaignId, candidateId, payload);
+}
+
 async function castVote(userId, campaignId, candidateId) {
   const campaign = await campaignsModel.getCampaignById(campaignId);
   if (!campaign) throw { status: 404, message: 'Campaign not found' };
@@ -67,4 +75,4 @@ async function castVote(userId, campaignId, candidateId) {
   return votesModel.castVote({ id, voter_id: userId, candidate_id: candidateId, campaign_id: campaignId });
 }
 
-module.exports = { createCampaign, updateCampaign, deleteCampaign, addCandidate, list, getCampaign, castVote };
+module.exports = { createCampaign, updateCampaign, deleteCampaign, addCandidate, removeCandidate, modifyCandidate, list, getCampaign, castVote };

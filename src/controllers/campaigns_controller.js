@@ -42,6 +42,20 @@ exports.addCandidate = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+exports.removeCandidate = async (req, res, next) => {
+  try {
+    await campaignsService.removeCandidate(req.params.id, req.params.candidateId);
+    res.status(204).send();
+  } catch (err) { next(err); }
+};
+
+exports.updateCandidate = async (req, res, next) => {
+  try {
+    const updated = await campaignsService.modifyCandidate(req.params.id, req.params.candidateId, req.body);
+    res.json(updated);
+  } catch (err) { next(err); }
+};
+
 exports.castVote = async (req, res, next) => {
   try {
     const vote = await campaignsService.castVote(req.user.id, req.params.id, req.body.candidate_id);

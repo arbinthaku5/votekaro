@@ -48,6 +48,8 @@ router.put("/:id",authenticate,authorizeRoles("admin", "moderator"),validate(cam
 router.delete("/:id",authenticate,authorizeRoles("admin"),campaignsCtrl.remove);
 
 router.post("/:id/candidates",authenticate,authorizeRoles("admin", "moderator"),validate(candidateSchema),campaignsCtrl.addCandidate);
+router.put("/:id/candidates/:candidateId",authenticate,authorizeRoles("admin", "moderator"),validate(candidateSchema.partial()),campaignsCtrl.updateCandidate);
+router.delete("/:id/candidates/:candidateId",authenticate,authorizeRoles("admin", "moderator"),campaignsCtrl.removeCandidate);
 
 router.post("/:id/vote",authenticate,authorizeRoles("voter", "moderator"),campaignsCtrl.castVote);
 
