@@ -33,9 +33,9 @@ Set up environment variables:
 
 ```bash
 PORT=4000
-DATABASE_URL=postgresql://username:your_password@localhost:5432/database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/votekaro
 JWT_ACCESS_SECRET=replace_this_with_a_long_random_string
-ACCESS_TOKEN_EXPIRES_IN=time_in_minutes
+ACCESS_TOKEN_EXPIRES_IN=15m
 BCRYPT_SALT=12
 ```
 
