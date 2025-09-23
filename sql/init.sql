@@ -45,5 +45,14 @@ CREATE TABLE votes (
   UNIQUE(voter_id, campaign_id)
 );
 
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT now()
+);
+
+
 CREATE INDEX idx_campaign_start ON campaigns (start_date);
 CREATE INDEX idx_campaign_end ON campaigns (end_date);
