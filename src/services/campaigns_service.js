@@ -17,10 +17,15 @@ async function createCampaign(payload, actorId) {
   });
 
   await db.query(
-    `INSERT INTO notifications (id, user_id, message)
-     SELECT gen_random_uuid(), u.id, $1
+    `INSERT INTO notifications (id, user_id, campaign_title, created_by, start_date, end_date )
+     SELECT gen_random_uuid(), u.id, $1, $2, $3, $4
      FROM users u WHERE u.role = 'admin'`,
-    [`New campaign "${campaign.title}" has been created`]
+    [
+      campaign.title,
+      actorId, // or creatorName
+      campaign.start_date,
+      campaign.end_date,
+    ]
   );
 
   return campaign;
