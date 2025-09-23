@@ -36,6 +36,11 @@ async function signup(payload) {
 
   const existing = await usersModel.findByEmail(payload.email);
   if (existing) throw { status: 400, message: 'Email already used' };
+
+  // Validate role - only allow 'voter' role for regular signup
+  const allowedRoles = ['voter'];
+  const role = payload.role && allowedRoles.includes(payload.role) ? payload.role : 'voter';
+
   const id = uuidv4();
   const hash = await bcrypt.hash(payload.password, bcryptSaltRounds);
   const created = await usersModel.createUser({
@@ -45,7 +50,7 @@ async function signup(payload) {
     username: payload.username,
     email: payload.email,
     password_hash: hash,
-    role: payload.role || 'voter'
+    role: role
   });
   return created;
 }
@@ -54,12 +59,23 @@ async function login({ email, password }) {
   console.log('Login attempt for:', email);
   const user = await usersModel.findByEmail(email);
   console.log('User found:', user ? 'yes' : 'no');
-  if (!user) throw { status: 401, message: 'Invalid credentials' };
+  if (!user) {
+    console.log('Login failed: User not found for email:', email);
+    throw { status: 401, message: 'Invalid credentials' };
+  }
   console.log('User password hash:', user.password_hash ? 'exists' : 'missing');
+  if (!user.password_hash) {
+    console.log('Login failed: No password hash found for user:', user.id);
+    throw { status: 401, message: 'Invalid credentials' };
+  }
   const ok = await bcrypt.compare(password, user.password_hash);
   console.log('Password match:', ok);
-  if (!ok) throw { status: 401, message: 'Invalid credentials' };
+  if (!ok) {
+    console.log('Login failed: Password mismatch for user:', user.id);
+    throw { status: 401, message: 'Invalid credentials' };
+  }
   const token = jwt.sign({ sub: user.id, role: user.role }, jwtSecret, { expiresIn: jwtExpiresIn });
+  console.log('Login successful for user:', user.id, 'with role:', user.role);
   return {
     accessToken: token,
     user: {

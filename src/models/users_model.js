@@ -8,7 +8,7 @@ async function createUser({ id, first_name, last_name, username, email, password
 }
 
 async function findByEmail(email) {
-  const { rows } = await db.query('SELECT * FROM users WHERE email=$1', [email]);
+  const { rows } = await db.query('SELECT id, first_name, last_name, username, email, role, dob, bio, photo_url, password_hash, created_at FROM users WHERE email=$1', [email]);
   return rows[0];
 }
 
