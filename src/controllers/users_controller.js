@@ -30,7 +30,15 @@ exports.adminDeleteUser = async (req, res, next) => {
 
 exports.list = async (req, res, next) => {
   try {
-    const users = await usersService.listUsers();
+    const { role } = req.query;
+    const users = await usersService.listUsers(role);
     res.json(users);
+  } catch (err) { next(err); }
+};
+
+exports.adminCreateUser = async (req, res, next) => {
+  try {
+    const user = await usersService.adminCreateUser(req.body);
+    res.status(201).json(user);
   } catch (err) { next(err); }
 };

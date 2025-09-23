@@ -32,8 +32,15 @@ async function deleteUser(id) {
   await db.query('DELETE FROM users WHERE id=$1', [id]);
 }
 
-async function listUsers() {
-  const { rows } = await db.query('SELECT id, first_name, last_name, username, email, role, dob, bio, photo_url, created_at FROM users ORDER BY created_at DESC');
+async function listUsers(role = null) {
+  let query = 'SELECT id, first_name, last_name, username, email, role, dob, bio, photo_url, created_at FROM users';
+  const params = [];
+  if (role) {
+    query += ' WHERE role = $1';
+    params.push(role);
+  }
+  query += ' ORDER BY created_at DESC';
+  const { rows } = await db.query(query, params);
   return rows;
 }
 

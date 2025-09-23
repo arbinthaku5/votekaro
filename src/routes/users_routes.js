@@ -37,6 +37,7 @@ router.get("/me", authenticate, usersCtrl.me);
 router.put("/me", authenticate, validate(updateMeSchema), usersCtrl.updateMe);
 
 // admin routes
+router.post("/", authenticate, authorizeRoles("admin"), usersCtrl.adminCreateUser);
 router.get("/", authenticate, authorizeRoles("admin"), usersCtrl.list);
 router.put("/:id", authenticate,authorizeRoles("admin"),validate(updateMeSchema),usersCtrl.adminUpdateUser);
 router.delete("/:id",authenticate,authorizeRoles("admin"),usersCtrl.adminDeleteUser);

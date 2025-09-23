@@ -39,8 +39,16 @@ async function adminDeleteUser(targetUserId) {
   return usersModel.deleteUser(targetUserId);
 }
 
-async function listUsers() {
-  return usersModel.listUsers();
+async function listUsers(role = null) {
+  return usersModel.listUsers(role);
 }
 
-module.exports = { getProfile, updateProfile, adminUpdateUser, adminDeleteUser, listUsers };
+async function adminCreateUser(payload) {
+  const { first_name, last_name, username, email, password, role = 'voter' } = payload;
+  const id = uuidv4();
+  const saltRounds = 10;
+  const password_hash = await bcrypt.hash(password, saltRounds);
+  return usersModel.createUser({ id, first_name, last_name, username, email, password_hash, role });
+}
+
+module.exports = { getProfile, updateProfile, adminUpdateUser, adminDeleteUser, listUsers, adminCreateUser };
