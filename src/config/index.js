@@ -15,7 +15,7 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).default("4000"),
   DATABASE_URL: z.url(),
   JWT_ACCESS_SECRET: z.string().min(10),
-  ACCESS_TOKEN_EXPIRES_IN: z.string().default("15m"),
+  ACCESS_TOKEN_EXPIRES_IN: z.string().default("24h"),
   BCRYPT_SALT: z.string().transform(Number).default("12")
 });
 

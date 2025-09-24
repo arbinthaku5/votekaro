@@ -19,7 +19,7 @@ async function createCampaign(payload, actorId) {
   await db.query(
     `INSERT INTO notifications
     (id, user_id, type, metadata)
-    SELECT gen_random_uuid(), u.id, $1, $2,
+    SELECT gen_random_uuid(), u.id, $1, $2
     FROM users u
     WHERE u.role = 'admin'`,
     [
