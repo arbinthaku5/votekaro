@@ -46,19 +46,29 @@ CREATE TABLE votes (
 );
 
 
-CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT now()
+-- CREATE TABLE IF NOT EXISTS notifications (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+--     message TEXT NOT NULL,
+--     created_at TIMESTAMP DEFAULT now()
+-- );
+
+-- ALTER TABLE notifications
+-- ADD COLUMN campaign_title TEXT,
+-- ADD COLUMN created_by TEXT,
+-- ADD COLUMN start_date TIMESTAMP,
+-- ADD COLUMN end_date TIMESTAMP,
+-- DROP COLUMN message;
+
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),     -- recipient
+  created_by UUID REFERENCES users(id),  -- actor
+  type TEXT NOT NULL,                    -- e.g. 'campaign_created'
+  metadata JSONB,                        -- flexible fields
+  created_at TIMESTAMP DEFAULT now()
 );
 
-ALTER TABLE notifications
-ADD COLUMN campaign_title TEXT,
-ADD COLUMN created_by TEXT,
-ADD COLUMN start_date TIMESTAMP,
-ADD COLUMN end_date TIMESTAMP,
-DROP COLUMN message;
 
 
 CREATE INDEX idx_campaign_start ON campaigns (start_date);
