@@ -24,4 +24,26 @@ async function userCreateNotification({ type, userId, metadata }) {
   return rows[0];
 }
 
-module.exports = { getNotifications, userCreateNotification };
+async function campaignNotification(type, actorId, campaign) {
+  await db.query(
+    `INSERT INTO notifications (id, user_id, type, metadata)
+        SELECT gen_random_uuid(), u.id, $1, $2
+        FROM users u
+        WHERE u.role = 'admin'`,
+    [
+      type,
+      JSON.stringify({
+        created_by: actorId,
+        campaign_title: campaign.title,
+        start_date: campaign.start_date,
+        end_date: campaign.end_date,
+      }),
+    ]
+  );
+}
+
+module.exports = {
+  getNotifications,
+  userCreateNotification,
+  campaignNotification,
+};

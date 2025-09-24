@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const campaignsModel = require("../models/campaigns_model");
 const votesModel = require("../models/votes_model");
 const db = require("../db/pgPool");
+const notificationService = require("./notifications_service");
 
 async function createCampaign(payload, actorId) {
   const id = uuidv4();
@@ -16,33 +17,39 @@ async function createCampaign(payload, actorId) {
     created_by: actorId,
   });
 
-  await db.query(
-    `INSERT INTO notifications
-    (id, user_id, type, metadata)
-    SELECT gen_random_uuid(), u.id, $1, $2,
-    FROM users u
-    WHERE u.role = 'admin'`,
-    [
-      // actorId, // $1 = user who created campaign
-      "campaign_created", //$2 = type
-      JSON.stringify({
-        created_by: actorId,
-        campaign_title: campaign.title,
-        start_date: campaign.start_date,
-        end_date: campaign.end_date,
-      }), // $3 = metadata as JSON
-    ]
+  await notificationService.campaignNotification(
+    "campaign_created",
+    actorId,
+    campaign
   );
 
   return campaign;
 }
 
-async function updateCampaign(id, payload) {
+async function updateCampaign(id, payload, actorId) {
+  const updated = await campaignsModel.updateCampaign(id, payload);
+  if (!updated) throw { status: 404, message: "Campaign not found" };
+
+  await notificationService.campaignNotification(
+    "campaign_updated",
+    actorId,
+    updated
+  );
+
   return campaignsModel.updateCampaign(id, payload);
 }
 
-async function deleteCampaign(id) {
-  return campaignsModel.deleteCampaign(id);
+async function deleteCampaign(id, actorId) {
+  const campaign = await campaignsModel.getCampaignById(id);
+  if (!campaign) throw { status: 404, message: "Campaign not found" };
+
+  const deleted = await campaignsModel.deleteCampaign(id);
+  await notificationService.campaignNotification(
+    "campaign_deleted",
+    actorId,
+    campaign
+  );
+  return deleted;
 }
 
 async function addCandidate(campaignId, payload) {
