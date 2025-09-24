@@ -1,19 +1,25 @@
-// routes/notifications.js
 const express = require("express");
 const router = express.Router();
-const db = require("../db/pgPool");
+const { authenticate } = require("../middleware/auth");
+const { getNotifications } = require("../services/notifications_service");
 
-router.get("/", async (req, res) => {
-  console.log("[Backend] GET /api/notifications called");
+// GET /api/notifications
+router.get("/", authenticate, async (req, res) => {
   try {
-    const { rows } = await db.query(
-      "SELECT * FROM notifications ORDER BY created_at DESC"
-    );
-    console.log("[Backend] Fetched notifications:", rows);
-    res.json(rows);
+    // Assuming you have authentication middleware that sets req.user.id
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const notifications = await getNotifications(userId);
+    console.log("[Backend] Returning notifications:", notifications);
+
+    res.json(notifications);
   } catch (err) {
     console.error("[Backend] Error fetching notifications:", err);
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Failed to fetch notifications" });
   }
 });
 

@@ -4,7 +4,7 @@ const authService = require("./services/auth_service");
 const fs = require("fs");
 const path = require("path");
 const db = require("./db/pgPool");
-const notificationsRouter = require("./routes/notifications");
+const notificationRoutes = require("./routes/notifications");
 
 // Initialize database tables
 async function initializeDatabase() {
@@ -55,7 +55,7 @@ app.listen(port, async () => {
   await createAdminUser();
 });
 
-app.use("/api/notifications", notificationsRouter);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("Voting System Backend is running");

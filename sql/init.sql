@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at TIMESTAMP DEFAULT now()
 );
 
+ALTER TABLE notifications
+ADD COLUMN campaign_title TEXT,
+ADD COLUMN created_by TEXT,
+ADD COLUMN start_date TIMESTAMP,
+ADD COLUMN end_date TIMESTAMP,
+DROP COLUMN message;
+
 
 CREATE INDEX idx_campaign_start ON campaigns (start_date);
 CREATE INDEX idx_campaign_end ON campaigns (end_date);

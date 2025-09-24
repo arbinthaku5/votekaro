@@ -17,14 +17,20 @@ async function createCampaign(payload, actorId) {
   });
 
   await db.query(
-    `INSERT INTO notifications (id, user_id, campaign_title, created_by, start_date, end_date )
-     SELECT gen_random_uuid(), u.id, $1, $2, $3, $4
-     FROM users u WHERE u.role = 'admin'`,
+    `INSERT INTO notifications
+    (id, user_id, type, metadata)
+    SELECT gen_random_uuid(), u.id, $1, $2,
+    FROM users u
+    WHERE u.role = 'admin'`,
     [
-      campaign.title,
-      actorId, // or creatorName
-      campaign.start_date,
-      campaign.end_date,
+      // actorId, // $1 = user who created campaign
+      "campaign_created", //$2 = type
+      JSON.stringify({
+        created_by: actorId,
+        campaign_title: campaign.title,
+        start_date: campaign.start_date,
+        end_date: campaign.end_date,
+      }), // $3 = metadata as JSON
     ]
   );
 
