@@ -16,7 +16,7 @@ exports.login = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
       sameSite: 'strict',
-      maxAge: 15 * 60 * 1000 // 15 minutes
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
     // Return user data without the token
