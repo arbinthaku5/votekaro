@@ -25,7 +25,8 @@ const signupSchema = z.object({
 
 const loginSchema = z.object({
   email: z.email("Invalid email"),
-  password: z.string().min(8, "Password is required")
+  password: z.string().min(8, "Password is required"),
+  rememberMe: z.boolean().optional()
 });
 
 router.post("/signup", validate(signupSchema), authCtrl.signup);

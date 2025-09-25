@@ -69,7 +69,7 @@ async function signup(payload) {
   return created;
 }
 
-async function login({ email, password }) {
+async function login({ email, password, rememberMe = false }) {
   console.log("Login attempt for:", email);
   const user = await usersModel.findByEmail(email);
   console.log("User found:", user ? "yes" : "no");
@@ -88,8 +88,9 @@ async function login({ email, password }) {
     console.log("Login failed: Password mismatch for user:", user.id);
     throw { status: 401, message: "Invalid credentials" };
   }
+  const expiresIn = rememberMe ? '7d' : jwtExpiresIn;
   const token = jwt.sign({ sub: user.id, role: user.role }, jwtSecret, {
-    expiresIn: jwtExpiresIn,
+    expiresIn,
   });
   console.log("Login successful for user:", user.id, "with role:", user.role);
   return {

@@ -9,14 +9,16 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+    const { rememberMe = false } = req.validated || req.body;
     const { accessToken, user } = await authService.login(req.validated || req.body);
 
     // Set HttpOnly cookie with the JWT token
+    const maxAge = rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000; // 7 days or 24 hours
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge
     });
 
     // Return user data without the token
