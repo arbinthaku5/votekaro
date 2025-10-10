@@ -1,33 +1,27 @@
+const http = require("http");
 const app = require("./app");
 const { port } = require("./config");
-const authService = require("./services/auth_service");
+const { init: initRealtime } = require("./realtime/socket");
 const fs = require("fs");
 const path = require("path");
 const db = require("./db/pgPool");
+const authService = require("./services/auth_service");
 const notificationRoutes = require("./routes/notifications");
 
-// Initialize database tables
 async function initializeDatabase() {
   try {
     const sqlPath = path.join(__dirname, "..", "sql", "init.sql");
     const sql = fs.readFileSync(sqlPath, "utf8");
-
-    // Split SQL commands and execute them
-    const commands = sql.split(";").filter((cmd) => cmd.trim().length > 0);
-
+    const commands = sql.split(";").filter((c) => c.trim().length > 0);
     for (const command of commands) {
-      if (command.trim()) {
-        await db.query(command);
-      }
+      if (command.trim()) await db.query(command);
     }
-
-    console.log("Database tables initialized successfully");
-  } catch (error) {
-    console.error("Error initializing database:", error.message);
+    console.log("Database initialized");
+  } catch (err) {
+    console.error("DB init error:", err.message || err);
   }
 }
 
-// Create admin user on server startup
 async function createAdminUser() {
   try {
     const adminPayload = {
@@ -39,24 +33,20 @@ async function createAdminUser() {
       role: "admin",
     };
     await authService.signup(adminPayload);
-    console.log("Admin user created successfully");
-  } catch (error) {
-    if (error.message === "Email already used") {
-      console.log("Admin user already exists");
-    } else {
-      console.error("Error creating admin user:", error.message);
-    }
+    console.log("Admin user created");
+  } catch (err) {
+    if (err.message === "Email already used") console.log("Admin exists");
+    else console.error("Admin create error:", err.message || err);
   }
 }
 
-app.listen(port, async () => {
+app.use("/api/notifications", notificationRoutes);
+
+const server = http.createServer(app);
+const io = initRealtime(server, { corsOrigin: "http://localhost:4200" }); // adjust origin for production
+
+server.listen(port, async () => {
   console.log(`Server running on http://localhost:${port}`);
   await initializeDatabase();
   await createAdminUser();
-});
-
-app.use("/api/notifications", notificationRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Voting System Backend is running");
 });
