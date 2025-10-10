@@ -23,14 +23,14 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const updated = await campaignsService.updateCampaign(req.params.id, req.body);
+    const updated = await campaignsService.updateCampaign(req.params.id, req.body, req.user.id);
     res.json(updated);
   } catch (err) { next(err); }
 };
 
 exports.remove = async (req, res, next) => {
   try {
-    await campaignsService.deleteCampaign(req.params.id);
+    await campaignsService.deleteCampaign(req.params.id, req.user.id);
     res.status(204).send();
   } catch (err) { next(err); }
 };

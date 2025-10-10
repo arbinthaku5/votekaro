@@ -23,13 +23,8 @@ async function createCampaign(payload, actorId) {
   // emit real-time event to everyone and admins:
   try {
     const io = getIo();
-    // broadcast basic campaign info
-    io.emit("campaign:created", {
-      id: campaign.id,
-      title: campaign.title,
-      start_date: campaign.start_date,
-      end_date: campaign.end_date,
-    });
+    // broadcast full campaign info
+    io.emit("campaign:created", campaign);
 
     // notify admins/moderators separately
     io.to("admins").emit("admin:campaign_created", {
@@ -52,7 +47,7 @@ async function updateCampaign(id, payload, actorId) {
 
   try {
     const io = getIo();
-    io.emit("campaign:updated", { id: updated.id, changes: payload });
+    io.emit("campaign:updated", updated);
     io.to("admins").emit("admin:campaign_updated", { id: updated.id, changes: payload, by: actorId });
   } catch (err) {
     console.warn("[realtime] emit updateCampaign failed:", err.message || err);
@@ -89,26 +84,16 @@ async function addCandidate(campaignId, payload) {
     campaign_id: campaignId,
   });
 
-  // notify admins via DB + realtime
+  // notify all clients via realtime
   try {
-    // you may want to call notificationService.userCreateNotification or campaignNotification as needed
     const io = getIo();
-    io.to("admins").emit("candidate:added", {
+    io.emit("candidate:added", {
       campaignId,
       candidate: {
         id: created.id,
         name: created.name,
         bio: created.bio,
-      },
-    });
-
-    // optionally notify subscribers of the campaign (they can be in room `campaign:{id}`)
-    io.to(`campaign:${campaignId}`).emit("campaign:candidate_added", {
-      campaignId,
-      candidate: {
-        id: created.id,
-        name: created.name,
-        bio: created.bio,
+        photo_url: created.photo_url,
       },
     });
   } catch (err) {
@@ -159,11 +144,36 @@ async function getCampaign(id) {
 }
 
 async function removeCandidate(campaignId, candidateId) {
-  return campaignsModel.deleteCandidate(campaignId, candidateId);
+  const deleted = await campaignsModel.deleteCandidate(campaignId, candidateId);
+  if (deleted) {
+    try {
+      const io = getIo();
+      io.emit("candidate:removed", {
+        campaignId,
+        candidateId,
+      });
+    } catch (err) {
+      console.warn("[realtime] emit removeCandidate failed:", err.message || err);
+    }
+  }
+  return deleted;
 }
 
 async function modifyCandidate(campaignId, candidateId, payload) {
-  return campaignsModel.updateCandidate(campaignId, candidateId, payload);
+  const updated = await campaignsModel.updateCandidate(campaignId, candidateId, payload);
+  if (updated) {
+    try {
+      const io = getIo();
+      io.emit("candidate:updated", {
+        campaignId,
+        candidateId,
+        changes: payload,
+      });
+    } catch (err) {
+      console.warn("[realtime] emit modifyCandidate failed:", err.message || err);
+    }
+  }
+  return updated;
 }
 
 async function castVote(userId, campaignId, candidateId) {
@@ -193,8 +203,8 @@ async function castVote(userId, campaignId, candidateId) {
       m[r.candidate_id] = r.votes;
       return m;
     }, {});
-    // Emit to clients who joined campaign room
-    io.to(`campaign:${campaignId}`).emit("vote:updated", {
+    // Emit to all connected clients
+    io.emit("vote:updated", {
       campaignId,
       candidateId,
       votes: votesMap,
