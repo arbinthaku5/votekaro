@@ -49,7 +49,13 @@ function init(server, options = {}) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`[socket] connected: ${socket.id} user=${socket.user?.id} role=${socket.user?.role}`);
+    console.log(
+      `[socket] connected: ${socket.id} user=${socket.user?.id} role=${socket.user?.role}`
+    );
+
+    if (socket.user?.id) {
+      socket.join(socket.user.id); // Each user joins their own room
+    }
 
     socket.on("joinCampaign", (campaignId) => {
       if (!campaignId) return;
@@ -81,7 +87,8 @@ function init(server, options = {}) {
 }
 
 function getIo() {
-  if (!io) throw new Error("Socket.io not initialized. Call init(server) first.");
+  if (!io)
+    throw new Error("Socket.io not initialized. Call init(server) first.");
   return io;
 }
 
