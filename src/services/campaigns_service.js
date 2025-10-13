@@ -17,26 +17,36 @@ async function createCampaign(payload, actorId) {
     created_by: actorId,
   });
 
+  // If candidates are provided in payload, add them
+  if (payload.candidates && Array.isArray(payload.candidates)) {
+    for (const candidate of payload.candidates) {
+      await addCandidate(id, candidate);
+    }
+  }
+
+  // Get the full campaign with candidates
+  const fullCampaign = await getCampaign(id);
+
   // push DB notification
-  await notificationService.campaignNotification("campaign_created", actorId, campaign);
+  await notificationService.campaignNotification("campaign_created", actorId, fullCampaign);
 
   // emit real-time event to everyone and admins:
   try {
     const io = getIo();
-    // broadcast full campaign info
-    io.emit("campaign:created", campaign);
+    // broadcast full campaign info with candidates
+    io.emit("campaign:created", fullCampaign);
 
     // notify admins/moderators separately
     io.to("admins").emit("admin:campaign_created", {
-      id: campaign.id,
-      title: campaign.title,
+      id: fullCampaign.id,
+      title: fullCampaign.title,
       created_by: actorId,
     });
   } catch (err) {
     console.warn("[realtime] emit createCampaign failed:", err.message || err);
   }
 
-  return campaign;
+  return fullCampaign;
 }
 
 async function updateCampaign(id, payload, actorId) {
@@ -87,7 +97,7 @@ async function addCandidate(campaignId, payload) {
   // notify all clients via realtime
   try {
     const io = getIo();
-    io.emit("candidate:added", {
+    io.to(`campaign:${campaignId}`).emit("candidate:added", {
       campaignId,
       candidate: {
         id: created.id,
@@ -148,7 +158,7 @@ async function removeCandidate(campaignId, candidateId) {
   if (deleted) {
     try {
       const io = getIo();
-      io.emit("candidate:removed", {
+      io.to(`campaign:${campaignId}`).emit("candidate:removed", {
         campaignId,
         candidateId,
       });
@@ -164,7 +174,7 @@ async function modifyCandidate(campaignId, candidateId, payload) {
   if (updated) {
     try {
       const io = getIo();
-      io.emit("candidate:updated", {
+      io.to(`campaign:${campaignId}`).emit("candidate:updated", {
         campaignId,
         candidateId,
         changes: payload,
@@ -203,8 +213,15 @@ async function castVote(userId, campaignId, candidateId) {
       m[r.candidate_id] = r.votes;
       return m;
     }, {});
-    // Emit to all connected clients
-    io.emit("vote:updated", {
+    // Emit to campaign room only
+    io.to(`campaign:${campaignId}`).emit("vote:updated", {
+      campaignId,
+      candidateId,
+      votes: votesMap,
+    });
+
+    // Also emit to admins for real-time updates in admin dashboard
+    io.to("admins").emit("vote:updated", {
       campaignId,
       candidateId,
       votes: votesMap,
