@@ -35,10 +35,81 @@ async function listByStatus(status) {
   return rows;
 }
 
+async function listCampaignsWithDetails(status, limit = 5, offset = 0) {
+  let whereClause = '';
+  if (status === 'ongoing') whereClause = 'WHERE c.start_date <= now() AND c.end_date >= now()';
+  else if (status === 'upcoming') whereClause = 'WHERE c.start_date > now()';
+  else if (status === 'past') whereClause = 'WHERE c.end_date < now()';
+
+  const q = `
+    SELECT
+      c.*,
+      COALESCE(json_agg(
+        json_build_object(
+          'id', cd.id,
+          'name', cd.name,
+          'bio', cd.bio,
+          'photo_url', cd.photo_url,
+          'votes', COALESCE(vc.votes, 0)
+        ) ORDER BY cd.id
+      ) FILTER (WHERE cd.id IS NOT NULL), '[]') AS candidates
+    FROM campaigns c
+    LEFT JOIN candidates cd ON c.id = cd.campaign_id
+    LEFT JOIN (
+      SELECT candidate_id, COUNT(*)::int AS votes
+      FROM votes
+      GROUP BY candidate_id
+    ) vc ON cd.id = vc.candidate_id
+    ${whereClause}
+    GROUP BY c.id
+    ORDER BY c.start_date DESC
+    LIMIT $1 OFFSET $2
+  `;
+  const { rows } = await db.query(q, [limit, offset]);
+  return rows;
+}
+
+async function getCampaignWithDetails(id) {
+  const q = `
+    SELECT
+      c.*,
+      COALESCE(json_agg(
+        json_build_object(
+          'id', cd.id,
+          'name', cd.name,
+          'bio', cd.bio,
+          'photo_url', cd.photo_url,
+          'votes', COALESCE(vc.votes, 0)
+        ) ORDER BY cd.id
+      ) FILTER (WHERE cd.id IS NOT NULL), '[]') AS candidates
+    FROM campaigns c
+    LEFT JOIN candidates cd ON c.id = cd.campaign_id
+    LEFT JOIN (
+      SELECT candidate_id, COUNT(*)::int AS votes
+      FROM votes
+      GROUP BY candidate_id
+    ) vc ON cd.id = vc.candidate_id
+    WHERE c.id = $1
+    GROUP BY c.id
+  `;
+  const { rows } = await db.query(q, [id]);
+  return rows[0];
+}
+
 async function addCandidate({ id, name, bio, photo_url, campaign_id }) {
   const q = `INSERT INTO candidates (id, name, bio, photo_url, campaign_id) VALUES ($1,$2,$3,$4,$5) RETURNING *`;
   const { rows } = await db.query(q, [id,name,bio,photo_url,campaign_id]);
   return rows[0];
+}
+
+// Batch insert multiple candidates
+async function addCandidates(candidates) {
+  if (!candidates.length) return [];
+  const placeholders = candidates.map((_, i) => `($${i*5+1}, $${i*5+2}, $${i*5+3}, $${i*5+4}, $${i*5+5})`).join(', ');
+  const values = candidates.flatMap(c => [c.id, c.name, c.bio || null, c.photo_url || null, c.campaign_id]);
+  const q = `INSERT INTO candidates (id, name, bio, photo_url, campaign_id) VALUES ${placeholders} RETURNING *`;
+  const { rows } = await db.query(q, values);
+  return rows;
 }
 
 async function getCandidatesByCampaign(campaign_id) {
@@ -62,5 +133,6 @@ async function updateCandidate(campaignId, candidateId, fields) {
 
 module.exports = {
   createCampaign, updateCampaign, deleteCampaign, getCampaignById, listByStatus,
-  addCandidate, getCandidatesByCampaign, deleteCandidate, updateCandidate
+  listCampaignsWithDetails, getCampaignWithDetails,
+  addCandidate, addCandidates, getCandidatesByCampaign, deleteCandidate, updateCandidate
 };

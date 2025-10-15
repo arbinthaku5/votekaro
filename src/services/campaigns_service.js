@@ -17,11 +17,15 @@ async function createCampaign(payload, actorId) {
     created_by: actorId,
   });
 
-  // If candidates are provided in payload, add them
   if (payload.candidates && Array.isArray(payload.candidates)) {
-    for (const candidate of payload.candidates) {
-      await addCandidate(id, candidate);
-    }
+    const candidatesToAdd = payload.candidates.map(candidate => ({
+      id: uuidv4(),
+      name: candidate.name,
+      bio: candidate.bio || null,
+      photo_url: candidate.photo_url || null,
+      campaign_id: id,
+    }));
+    await campaignsModel.addCandidates(candidatesToAdd);
   }
 
   // Get the full campaign with candidates
@@ -113,44 +117,15 @@ async function addCandidate(campaignId, payload) {
   return created;
 }
 
-async function list(status) {
-  const campaigns = await campaignsModel.listByStatus(status);
-  const withCandidates = await Promise.all(
-    campaigns.map(async (c) => {
-      const candidates = await campaignsModel.getCandidatesByCampaign(c.id);
-      const counts = await votesModel.countVotesByCampaign(c.id);
-      const votesMap = counts.reduce((m, r) => {
-        m[r.candidate_id] = r.votes;
-        return m;
-      }, {});
-      return {
-        ...c,
-        candidates: candidates.map((cd) => ({
-          ...cd,
-          votes: votesMap[cd.id] || 0,
-        })),
-      };
-    })
-  );
-  return withCandidates;
+async function list(status, limit = 5, offset = 0) {
+  const campaigns = await campaignsModel.listCampaignsWithDetails(status, limit, offset);
+  return campaigns;
 }
 
 async function getCampaign(id) {
-  const c = await campaignsModel.getCampaignById(id);
+  const c = await campaignsModel.getCampaignWithDetails(id);
   if (!c) throw { status: 404, message: "Campaign not found" };
-  const candidates = await campaignsModel.getCandidatesByCampaign(id);
-  const counts = await votesModel.countVotesByCampaign(id);
-  const votesMap = counts.reduce((m, r) => {
-    m[r.candidate_id] = r.votes;
-    return m;
-  }, {});
-  return {
-    ...c,
-    candidates: candidates.map((cd) => ({
-      ...cd,
-      votes: votesMap[cd.id] || 0,
-    })),
-  };
+  return c;
 }
 
 async function removeCandidate(campaignId, candidateId) {
