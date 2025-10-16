@@ -258,17 +258,17 @@ async function checkEndedCampaigns() {
   const endedCampaigns = await db.query(`
     SELECT * FROM campaigns
     WHERE end_date < NOW()
-    AND (ended IS NULL or ended = FALSE)`);
+    AND (notified_end IS NULL or notified_end = FALSE)`);
 
   for (const campaign of endedCampaigns.rows) {
-    // Notify admins that the campaign has ended
+
     await notificationService.campaignNotification(
       "campaign_ended",
       campaign.created_by,
       campaign
     );
 
-    await db.query(`UPDATE campaigns SET ended = TRUE WHERE id = $1`, [
+    await db.query(`UPDATE campaigns SET notified_end = TRUE WHERE id = $1`, [
       campaign.id,
     ]);
 

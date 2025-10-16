@@ -1,10 +1,9 @@
+const notificationsService = require("../services/notifications_service");
+
 exports.list = async (req, res, next) => {
   try {
-    const { rows } = await db.query(
-      "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC",
-      [req.user.id]
-    );
-    res.json(rows);
+    const notifications = await notificationsService.getNotifications(req.user.id);
+    res.json(notifications);
   } catch (err) {
     next(err);
   }

@@ -6,7 +6,6 @@ const fs = require("fs");
 const path = require("path");
 const db = require("./db/pgPool");
 const authService = require("./services/auth_service");
-const notificationRoutes = require("./routes/notifications");
 
 const { checkEndedCampaigns } = require("./services/campaigns_service");
 
@@ -42,10 +41,8 @@ async function createAdminUser() {
   }
 }
 
-app.use("/api/notifications", notificationRoutes);
-
 const server = http.createServer(app);
-const io = initRealtime(server, { corsOrigin: "http://localhost:4200" }); // adjust origin for production
+const io = initRealtime(server, { corsOrigin: "http://localhost:4200" });
 
 server.listen(port, async () => {
   console.log(`Server running on http://localhost:${port}`);
