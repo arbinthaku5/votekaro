@@ -2,7 +2,7 @@ const campaignsService = require('../services/campaigns_service');
 
 exports.list = async (req, res, next) => {
   try {
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = parseInt(req.query.offset) || 0;
     const items = await campaignsService.list(req.query.status, limit, offset);
     res.json(items);

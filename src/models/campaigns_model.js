@@ -35,7 +35,7 @@ async function listByStatus(status) {
   return rows;
 }
 
-async function listCampaignsWithDetails(status, limit = 5, offset = 0) {
+async function listCampaignsWithDetails(status, limit = 10, offset = 0) {
   let whereClause = '';
   if (status === 'ongoing') whereClause = 'WHERE c.start_date <= now() AND c.end_date >= now()';
   else if (status === 'upcoming') whereClause = 'WHERE c.start_date > now()';
@@ -154,7 +154,6 @@ async function getUserPastCampaigns(userId) {
       ), '[]'::json) AS candidates
     FROM campaigns c
     INNER JOIN votes v ON c.id = v.campaign_id AND v.voter_id = $1
-    WHERE c.end_date < NOW()
     GROUP BY c.id
     ORDER BY c.end_date DESC
   `;

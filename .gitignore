@@ -1,3 +1,9 @@
+# Dependencies
 node_modules/
+
+# Environment variables
 .env
-package-lock.json
+
+# Personal or temporary files
+text.txt
+planning.txt

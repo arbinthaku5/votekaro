@@ -137,7 +137,7 @@ async function addCandidate(campaignId, payload) {
   return created;
 }
 
-async function list(status, limit = 5, offset = 0) {
+async function list(status, limit = 10, offset = 0) {
   const campaigns = await campaignsModel.listCampaignsWithDetails(
     status,
     limit,
