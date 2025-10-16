@@ -8,6 +8,8 @@ const db = require("./db/pgPool");
 const authService = require("./services/auth_service");
 const notificationRoutes = require("./routes/notifications");
 
+const { checkEndedCampaigns } = require("./services/campaigns_service");
+
 async function initializeDatabase() {
   try {
     const sqlPath = path.join(__dirname, "..", "sql", "init.sql");
@@ -50,3 +52,10 @@ server.listen(port, async () => {
   await initializeDatabase();
   await createAdminUser();
 });
+
+//Check for ended campaigns every 5 minutes:
+setInterval(() => {
+  checkEndedCampaigns().catch((err) =>
+    console.error("checkEndedCampaigns error:", err)
+  );
+}, 0.5 * 60 * 1000);

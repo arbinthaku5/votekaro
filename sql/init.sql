@@ -56,6 +56,9 @@ CREATE TABLE notifications (
 );
 
 
+ALTER TABLE campaigns ADD COLUMN notified_end BOOLEAN DEFAULT FALSE;
+
+
 
 CREATE INDEX idx_campaign_start ON campaigns (start_date);
 CREATE INDEX idx_campaign_end ON campaigns (end_date);

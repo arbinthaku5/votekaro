@@ -18,7 +18,7 @@ async function createCampaign(payload, actorId) {
   });
 
   if (payload.candidates && Array.isArray(payload.candidates)) {
-    const candidatesToAdd = payload.candidates.map(candidate => ({
+    const candidatesToAdd = payload.candidates.map((candidate) => ({
       id: uuidv4(),
       name: candidate.name,
       bio: candidate.bio || null,
@@ -32,7 +32,11 @@ async function createCampaign(payload, actorId) {
   const fullCampaign = await getCampaign(id);
 
   // push DB notification
-  await notificationService.campaignNotification("campaign_created", actorId, fullCampaign);
+  await notificationService.campaignNotification(
+    "campaign_created",
+    actorId,
+    fullCampaign
+  );
 
   // emit real-time event to everyone and admins:
   try {
@@ -57,12 +61,20 @@ async function updateCampaign(id, payload, actorId) {
   const updated = await campaignsModel.updateCampaign(id, payload);
   if (!updated) throw { status: 404, message: "Campaign not found" };
 
-  await notificationService.campaignNotification("campaign_updated", actorId, updated);
+  await notificationService.campaignNotification(
+    "campaign_updated",
+    actorId,
+    updated
+  );
 
   try {
     const io = getIo();
     io.emit("campaign:updated", updated);
-    io.to("admins").emit("admin:campaign_updated", { id: updated.id, changes: payload, by: actorId });
+    io.to("admins").emit("admin:campaign_updated", {
+      id: updated.id,
+      changes: payload,
+      by: actorId,
+    });
   } catch (err) {
     console.warn("[realtime] emit updateCampaign failed:", err.message || err);
   }
@@ -75,12 +87,20 @@ async function deleteCampaign(id, actorId) {
   if (!campaign) throw { status: 404, message: "Campaign not found" };
 
   await campaignsModel.deleteCampaign(id);
-  await notificationService.campaignNotification("campaign_deleted", actorId, campaign);
+  await notificationService.campaignNotification(
+    "campaign_deleted",
+    actorId,
+    campaign
+  );
 
   try {
     const io = getIo();
     io.emit("campaign:deleted", { id });
-    io.to("admins").emit("admin:campaign_deleted", { id, title: campaign.title, by: actorId });
+    io.to("admins").emit("admin:campaign_deleted", {
+      id,
+      title: campaign.title,
+      by: actorId,
+    });
   } catch (err) {
     console.warn("[realtime] emit deleteCampaign failed:", err.message || err);
   }
@@ -118,7 +138,11 @@ async function addCandidate(campaignId, payload) {
 }
 
 async function list(status, limit = 5, offset = 0) {
-  const campaigns = await campaignsModel.listCampaignsWithDetails(status, limit, offset);
+  const campaigns = await campaignsModel.listCampaignsWithDetails(
+    status,
+    limit,
+    offset
+  );
   return campaigns;
 }
 
@@ -138,14 +162,21 @@ async function removeCandidate(campaignId, candidateId) {
         candidateId,
       });
     } catch (err) {
-      console.warn("[realtime] emit removeCandidate failed:", err.message || err);
+      console.warn(
+        "[realtime] emit removeCandidate failed:",
+        err.message || err
+      );
     }
   }
   return deleted;
 }
 
 async function modifyCandidate(campaignId, candidateId, payload) {
-  const updated = await campaignsModel.updateCandidate(campaignId, candidateId, payload);
+  const updated = await campaignsModel.updateCandidate(
+    campaignId,
+    candidateId,
+    payload
+  );
   if (updated) {
     try {
       const io = getIo();
@@ -155,7 +186,10 @@ async function modifyCandidate(campaignId, candidateId, payload) {
         changes: payload,
       });
     } catch (err) {
-      console.warn("[realtime] emit modifyCandidate failed:", err.message || err);
+      console.warn(
+        "[realtime] emit modifyCandidate failed:",
+        err.message || err
+      );
     }
   }
   return updated;
@@ -165,11 +199,16 @@ async function castVote(userId, campaignId, candidateId) {
   const campaign = await campaignsModel.getCampaignById(campaignId);
   if (!campaign) throw { status: 404, message: "Campaign not found" };
   const now = new Date();
-  if (!(new Date(campaign.start_date) <= now && now <= new Date(campaign.end_date))) {
+  if (
+    !(
+      new Date(campaign.start_date) <= now && now <= new Date(campaign.end_date)
+    )
+  ) {
     throw { status: 400, message: "Campaign not active" };
   }
   const already = await votesModel.hasVoted(userId, campaignId);
-  if (already) throw { status: 400, message: "User already voted in this campaign" };
+  if (already)
+    throw { status: 400, message: "User already voted in this campaign" };
 
   const id = uuidv4();
   const vote = await votesModel.castVote({
@@ -215,6 +254,37 @@ async function castVote(userId, campaignId, candidateId) {
   return vote;
 }
 
+async function checkEndedCampaigns() {
+  const endedCampaigns = await db.query(`
+    SELECT * FROM campaigns
+    WHERE end_date < NOW()
+    AND (ended IS NULL or ended = FALSE)`);
+
+  for (const campaign of endedCampaigns.rows) {
+    // Notify admins that the campaign has ended
+    await notificationService.campaignNotification(
+      "campaign_ended",
+      campaign.created_by,
+      campaign
+    );
+
+    await db.query(`UPDATE campaigns SET ended = TRUE WHERE id = $1`, [
+      campaign.id,
+    ]);
+
+    try {
+      const io = getIo();
+      io.emit("campaign:ended", { id: campaign.id, title: campaign.title });
+      io.to("admins").emit("admin:campaign_ended", {
+        id: campaign.id,
+        title: campaign.title,
+      });
+    } catch (err) {
+      console.warn("[realtime] emit campaignEnded failed:", err.message || err);
+    }
+  }
+}
+
 module.exports = {
   createCampaign,
   updateCampaign,
@@ -225,4 +295,5 @@ module.exports = {
   list,
   getCampaign,
   castVote,
+  checkEndedCampaigns,
 };
