@@ -131,8 +131,40 @@ async function updateCandidate(campaignId, candidateId, fields) {
   return rows[0];
 }
 
+async function getUserPastCampaigns(userId) {
+  const q = `
+    SELECT c.*,
+      COALESCE((
+        SELECT json_agg(
+          json_build_object(
+            'id', cd.id,
+            'name', cd.name,
+            'bio', cd.bio,
+            'photo_url', cd.photo_url,
+            'votes', COALESCE(vc.votes, 0)
+          ) ORDER BY cd.id
+        )
+        FROM candidates cd
+        LEFT JOIN (
+          SELECT candidate_id, COUNT(*)::int AS votes
+          FROM votes
+          GROUP BY candidate_id
+        ) vc ON cd.id = vc.candidate_id
+        WHERE cd.campaign_id = c.id
+      ), '[]'::json) AS candidates
+    FROM campaigns c
+    INNER JOIN votes v ON c.id = v.campaign_id AND v.voter_id = $1
+    WHERE c.end_date < NOW()
+    GROUP BY c.id
+    ORDER BY c.end_date DESC
+  `;
+  const { rows } = await db.query(q, [userId]);
+  return rows;
+}
+
 module.exports = {
   createCampaign, updateCampaign, deleteCampaign, getCampaignById, listByStatus,
   listCampaignsWithDetails, getCampaignWithDetails,
-  addCandidate, addCandidates, getCandidatesByCampaign, deleteCandidate, updateCandidate
+  addCandidate, addCandidates, getCandidatesByCampaign, deleteCandidate, updateCandidate,
+  getUserPastCampaigns
 };
