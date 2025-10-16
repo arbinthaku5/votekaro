@@ -64,3 +64,10 @@ exports.castVote = async (req, res, next) => {
     res.status(201).json(vote);
   } catch (err) { next(err); }
 };
+
+exports.getUserPastCampaigns = async (req, res, next) => {
+  try {
+    const campaigns = await campaignsService.getUserPastCampaigns(req.user.id);
+    res.json(campaigns);
+  } catch (err) { next(err); }
+};

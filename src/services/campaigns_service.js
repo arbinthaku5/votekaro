@@ -254,6 +254,10 @@ async function castVote(userId, campaignId, candidateId) {
   return vote;
 }
 
+async function getUserPastCampaigns(userId) {
+  return await campaignsModel.getUserPastCampaigns(userId);
+}
+
 async function checkEndedCampaigns() {
   const endedCampaigns = await db.query(`
     SELECT * FROM campaigns
@@ -295,5 +299,6 @@ module.exports = {
   list,
   getCampaign,
   castVote,
+  getUserPastCampaigns,
   checkEndedCampaigns,
 };

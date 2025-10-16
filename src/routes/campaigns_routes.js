@@ -53,5 +53,7 @@ router.delete("/:id/candidates/:candidateId",authenticate,authorizeRoles("admin"
 
 router.post("/:id/vote",authenticate,authorizeRoles("voter", "moderator"),campaignsCtrl.castVote);
 
+router.get("/user/past", authenticate, authorizeRoles("voter", "moderator"), campaignsCtrl.getUserPastCampaigns);
+
 module.exports = router;
 
