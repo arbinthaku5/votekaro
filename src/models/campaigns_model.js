@@ -35,7 +35,7 @@ async function listByStatus(status) {
   return rows;
 }
 
-async function listCampaignsWithDetails(status, limit = 10, offset = 0) {
+async function listCampaignsWithDetails(status, limit = 2, offset = 0) {
   let whereClause = '';
   if (status === 'ongoing') whereClause = 'WHERE c.start_date <= now() AND c.end_date >= now()';
   else if (status === 'upcoming') whereClause = 'WHERE c.start_date > now()';

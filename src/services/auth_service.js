@@ -3,23 +3,15 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const usersModel = require("../models/users_model");
 const { jwtSecret, jwtExpiresIn, bcryptSaltRounds } = require("../config");
-const { userCreateNotification } = require("./notifications_service");
+const { userSignupNotification } = require("./notifications_service");
 
 async function signup(payload) {
   // Hardcoded admin user creation if email matches
   if (payload.email === "admin@gmail.com") {
     const existingAdmin = await usersModel.findByEmail("admin@gmail.com");
     if (existingAdmin) {
-      // Update existing admin user with correct password
-      const hash = await bcrypt.hash("Admin@123", bcryptSaltRounds);
-      const updatedAdmin = await usersModel.updateUser(existingAdmin.id, {
-        password_hash: hash,
-        first_name: "Admin",
-        last_name: "User",
-        username: "admin",
-        role: "admin",
-      });
-      return updatedAdmin;
+      // Admin already exists, skip creation
+      throw { status: 400, message: "Email already used" };
     }
     const id = uuidv4();
     const hash = await bcrypt.hash("Admin@123", bcryptSaltRounds);
@@ -57,13 +49,9 @@ async function signup(payload) {
     role: role,
   });
 
-  await userCreateNotification({
-    type: "user_created",
-    userId: null,
-    metadata: {
-      username: created.username,
-      email: created.email,
-    },
+  await userSignupNotification({
+    username: created.username,
+    email: created.email,
   });
 
   return created;

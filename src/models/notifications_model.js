@@ -25,12 +25,12 @@ async function createNotification({ id, type, userId, metadata }) {
   return rows[0];
 }
 
-async function createNotificationsForAdmins(type, metadata) {
+async function createNotificationsForAdminsAndModerators(type, metadata) {
   const { rows } = await db.query(
     `INSERT INTO notifications (id, user_id, type, metadata, created_at)
         SELECT gen_random_uuid(), u.id, $1, $2::jsonb, NOW()
         FROM users u
-        WHERE u.role = 'admin'
+        WHERE u.role IN ('admin', 'moderator')
         RETURNING id, user_id, type, metadata, created_at`,
     [type, JSON.stringify(metadata)]
   );
@@ -40,5 +40,5 @@ async function createNotificationsForAdmins(type, metadata) {
 module.exports = {
   getNotificationsByUser,
   createNotification,
-  createNotificationsForAdmins,
+  createNotificationsForAdminsAndModerators,
 };
