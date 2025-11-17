@@ -43,15 +43,15 @@ const candidateSchema = z.object({
 router.get("/", campaignsCtrl.list);
 router.get("/:id", campaignsCtrl.get);
 
-router.post("/",authenticate,authorizeRoles("admin", "moderator"),validate(campaignSchema),campaignsCtrl.create);
-router.put("/:id",authenticate,authorizeRoles("admin", "moderator"),validate(campaignSchema.partial()),campaignsCtrl.update);
-router.delete("/:id",authenticate,authorizeRoles("admin", "moderator"),campaignsCtrl.remove);
+router.post("/", authenticate, authorizeRoles("admin", "moderator"), validate(campaignSchema), campaignsCtrl.create);
+router.put("/:id", authenticate, authorizeRoles("admin", "moderator"), validate(campaignSchema.partial()), campaignsCtrl.update);
+router.delete("/:id", authenticate, authorizeRoles("admin", "moderator"), campaignsCtrl.remove);
 
-router.post("/:id/candidates",authenticate,authorizeRoles("admin", "moderator"),validate(candidateSchema),campaignsCtrl.addCandidate);
-router.put("/:id/candidates/:candidateId",authenticate,authorizeRoles("admin", "moderator"),validate(candidateSchema.partial()),campaignsCtrl.updateCandidate);
-router.delete("/:id/candidates/:candidateId",authenticate,authorizeRoles("admin", "moderator"),campaignsCtrl.removeCandidate);
+router.post("/:id/candidates", authenticate, authorizeRoles("admin", "moderator"), validate(candidateSchema), campaignsCtrl.addCandidate);
+router.put("/:id/candidates/:candidateId", authenticate, authorizeRoles("admin", "moderator"), validate(candidateSchema.partial()), campaignsCtrl.updateCandidate);
+router.delete("/:id/candidates/:candidateId", authenticate, authorizeRoles("admin", "moderator"), campaignsCtrl.removeCandidate);
 
-router.post("/:id/vote",authenticate,authorizeRoles("voter", "moderator"),campaignsCtrl.castVote);
+router.post("/:id/vote", authenticate, authorizeRoles("voter", "moderator"), campaignsCtrl.castVote);
 
 router.get("/user/past", authenticate, authorizeRoles("voter", "moderator"), campaignsCtrl.getUserPastCampaigns);
 
